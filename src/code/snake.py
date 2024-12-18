@@ -48,10 +48,12 @@ class SnakeHead(Snake):
         self.down = 2
         self.left = 3
         self.direction = 4
+        self.speed = 0
 
     def update(self, pressed, ate):
-        # keys pressed matters here
+        # grab center to send to next in line
         location = self.rect.center
+        # Don't want to be able to change direction 180 degrees
         if pressed[K_UP]:
             if self.direction != self.down:
                 self.direction = 0
@@ -64,14 +66,18 @@ class SnakeHead(Snake):
         if pressed[K_LEFT]:
             if self.direction != self.right:
                 self.direction = 3
-        match self.direction:
-            case self.up:
-                self.rect.move_ip(0, -self.body_size)
-            case self.right:
-                self.rect.move_ip(self.body_size, 0)
-            case self.down:
-                self.rect.move_ip(0, self.body_size)
-            case self.left:
-                self.rect.move_ip(-self.body_size, 0)
+        if self.speed < 0:
+            self.speed -= 1
+        else:
+            self.speed = 4
+            match self.direction:
+                case self.up:
+                    self.rect.move_ip(0, -self.body_size)
+                case self.right:
+                    self.rect.move_ip(self.body_size, 0)
+                case self.down:
+                    self.rect.move_ip(0, self.body_size)
+                case self.left:
+                    self.rect.move_ip(-self.body_size, 0)
         # return self.next.update(location, ate)
 

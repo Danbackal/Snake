@@ -2,7 +2,7 @@ import pygame
 from pygame.locals import *
 from random import randint
 
-from snake import Snake
+from snake import Snake, SnakeHead
 
 # Snake Game
 # Need game class - hold creation of apples, holds score, holds snake.
@@ -44,7 +44,7 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
 
         # Game Pieces
         self.snake = pygame.sprite.Group()
-        self.snake_head = Snake(self, (((self.board_right - self.board_left) / 2) + self.pixel_size / 2,
+        self.snake_head = SnakeHead(self, (((self.board_right - self.board_left) / 2) + self.pixel_size / 2,
                                        (self.board_top + (self.board_bottom - self.board_top) / 2)
                                        - self.pixel_size / 2))
         self.snake.add(self.snake_head)
@@ -64,10 +64,8 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
                 pressed_keys = pygame.key.get_pressed()
                 if pressed_keys[K_p]:
                     print("Pause here")
-                else:
-                    # Will add here, if collision with apple, then ate. False for testing
-                    self.snake_head.update(pressed_keys, False)
-                    print()
+                # Will add here, if collision with apple, then ate. False for testing
+                self.snake_head.update(pressed_keys, False)
             case self.game_paused:
                 print()
             case self.game_end:
