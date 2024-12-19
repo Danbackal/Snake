@@ -115,7 +115,7 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def update_board(self, target, value):
         # Used for updating the snake
-        self.board[target[0]][target[1]] = self.board[value[0]][value[1]]
+        self.board[target[0]][target[1]].set_cell(self.board[value[0]][value[1]].get_value())
         # SNAKE = 2
         self.board[target[0]][target[1]].set_cell(2)
 

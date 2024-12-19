@@ -53,10 +53,14 @@ class Snake:
 
 # I know inheritance doesn't make sense without shared methods - eventually draw will be shared
 # If I stick with cell method, I will likely remove inheritance
-class SnakeHead(Snake):
+class SnakeHead:
     # All the current init info is the same, really just want a unique update method
     def __init__(self, game, cell):
-        super().__init__(game, cell)
+        self.game = game
+        self.cell = cell
+        self.cell.set_cell(2)
+        self.body_size = cell.get_cell_size()
+        self.next = None
         self.up = 0
         self.right = 1
         self.down = 2
@@ -76,6 +80,7 @@ class SnakeHead(Snake):
     def update(self, pressed):
         # grab center to send to next in line
         x, y = self.cell.get_cell_location()
+        target = (x, y)
         # Don't want to be able to change direction 180 degrees
         if pressed[K_UP] and 0 in self.moves:
             self.direction = 0
@@ -85,11 +90,10 @@ class SnakeHead(Snake):
             self.direction = 2
         if pressed[K_LEFT] and 3 in self.moves:
             self.direction = 3
-        if self.speed < 0:
+        if self.speed > 0:
             self.speed -= 1
         else:
-            self.speed = 1000
-            target = (x, y)
+            self.speed = 2
             match self.direction:
                 # Only update the moves function after it moves, to stop 180 turns
                 case self.up:
@@ -100,13 +104,13 @@ class SnakeHead(Snake):
                     target = (x, y - 1)
                     self.moves = [0, 1, 3]
                 case self.right:
-                    if x == 49:
+                    if x == 39:
                         self.game.end_game()
                         return 0
                     target = (x + 1, y)
                     self.moves = [0, 1, 2]
                 case self.down:
-                    if y == 49:
+                    if y == 39:
                         self.game.end_game()
                         return 0
                     target = (x, y + 1)

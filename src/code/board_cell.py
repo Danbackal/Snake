@@ -37,11 +37,14 @@ class Cell:
     def get_cell_location(self):
         return self.board_location
 
+    def get_value(self):
+        return self.value
+
     # def get_center(self):
         # Will need this when snake draws itself?
 
     def clear_self(self):
-        self.value = None
+        self.value = self._empty
 
     def set_cell(self, value):
         self.value = value
