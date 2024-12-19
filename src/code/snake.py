@@ -47,37 +47,54 @@ class SnakeHead(Snake):
         self.right = 1
         self.down = 2
         self.left = 3
-        self.direction = 4
+        self.direction = 1
         self.speed = 0
+        self.moves = [0, 1, 2]
 
-    def update(self, pressed, ate):
+    # Current update function allows one to hold down the up key and spam left and right, letting the snake turn
+    # 180 degrees. I think I need to consider an array of locations, and a next allowed location function
+    # Something that says the snake can only ever move in 3 directions. Instead of saying
+    # Is the next direction 180 of the current direction, say
+    # is next direction allowed. So if traveling right, the allowed directions are right, up, and down.
+    # Then, until it moves, it tracks the last valid input.
+    def update(self, pressed):
         # grab center to send to next in line
         location = self.rect.center
         # Don't want to be able to change direction 180 degrees
-        if pressed[K_UP]:
-            if self.direction != self.down:
-                self.direction = 0
-        if pressed[K_RIGHT]:
-            if self.direction != self.left:
-                self.direction = 1
-        if pressed[K_DOWN]:
-            if self.direction != self.up:
-                self.direction = 2
-        if pressed[K_LEFT]:
-            if self.direction != self.right:
-                self.direction = 3
+        if pressed[K_UP] and 0 in self.moves:
+            self.direction = 0
+        if pressed[K_RIGHT] and 1 in self.moves:
+            self.direction = 1
+        if pressed[K_DOWN] and 2 in self.moves:
+            self.direction = 2
+        if pressed[K_LEFT] and 3 in self.moves:
+            self.direction = 3
         if self.speed < 0:
             self.speed -= 1
         else:
-            self.speed = 4
+            self.speed = 1000
             match self.direction:
+                # Only update the moves function after it moves, to stop 180 turns
                 case self.up:
                     self.rect.move_ip(0, -self.body_size)
+                    self.moves = [0, 1, 3]
                 case self.right:
                     self.rect.move_ip(self.body_size, 0)
+                    self.moves = [0, 1, 2]
                 case self.down:
                     self.rect.move_ip(0, self.body_size)
+                    self.moves = [1, 2, 3]
                 case self.left:
                     self.rect.move_ip(-self.body_size, 0)
-        # return self.next.update(location, ate)
+                    self.moves = [0, 2, 3]
+        ate = self.rect.colliderect(self.game.get_apple())
+        if self.next is not None:
+            snake = self.next.update(location, ate)
+        if ate:
+            self.game.new_apple()
+            if self.next is not None:
+                return snake
+            self.next = Snake(self.game, location)
+            return self.next
+        return None
 

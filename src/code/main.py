@@ -64,8 +64,10 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
                 pressed_keys = pygame.key.get_pressed()
                 if pressed_keys[K_p]:
                     print("Pause here")
-                # Will add here, if collision with apple, then ate. False for testing
-                self.snake_head.update(pressed_keys, False)
+                # have to check here for new snake to update our group for drawing
+                new_snake = self.snake_head.update(pressed_keys)
+                if new_snake is not None:
+                    self.snake.add(new_snake)
             case self.game_paused:
                 print()
             case self.game_end:
@@ -90,6 +92,15 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
 
     def get_pixel_size(self):
         return self.pixel_size
+
+    def get_apple(self):
+        return self.apple
+
+    # For now, random location.
+    def new_apple(self):
+        self.apple = pygame.rect.Rect(randint(self.board_left, self.board_right),
+                                      randint(self.board_top, self.board_bottom - self.pixel_size),
+                                      self.pixel_size, self.pixel_size)
 
 
 pygame.init()
