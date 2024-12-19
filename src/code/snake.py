@@ -7,20 +7,22 @@ from pygame.locals import *
 # segment.
 # The init I think stays the same. Location will be center of cell, cell should handle positioning
 class Snake:
-    def __init__(self, game, cell, location):
+    def __init__(self, game, cell):
         self.game = game
         self.cell = cell
+        # SNAKE = 2
+        self.cell.set_cell(2)
         self.body_size = cell.get_cell_size()
         # Will need to add to this. Head will get a value.
         # When food is eaten, tail will add one in its position
-        self.image = pygame.surface.Surface((self.body_size, self.body_size))
-        self.rect = self.image.get_rect(center=location)
-        self.image.fill("green")
+        # self.image = pygame.surface.Surface((self.body_size, self.body_size))
+        # self.rect = self.image.get_rect(center=self.cell.get_center())
+        # self.image.fill("green")
         self.next = None
 
     # TODO: Make snake draw itself. This will be in cell for now
-    def draw(self, surface):
-        surface.blit(self.image, self.rect)
+    # def draw(self, surface):
+    #     surface.blit(self.image, self.rect)
 
     # Okay hold up. Does the Snake fill out, or does the cell know it has a snake?
     # Do I need a whole snake class, or can the cell have 3 values - snake, fruit, empty?
@@ -40,7 +42,7 @@ class Snake:
         self.game.update_board(new_location, location)
         # If there is more snake, continue the trend
         if self.next is not None:
-            return self.next.update(location, ate)
+            self.next.update(location, ate)
         # If snake is last we need to clear the cell, or make a new snake there.
         if ate:
             self.next = self.game.create_snake(location)
@@ -53,8 +55,8 @@ class Snake:
 # If I stick with cell method, I will likely remove inheritance
 class SnakeHead(Snake):
     # All the current init info is the same, really just want a unique update method
-    def __init__(self, game, cell, location):
-        super().__init__(game, cell, location)
+    def __init__(self, game, cell):
+        super().__init__(game, cell)
         self.up = 0
         self.right = 1
         self.down = 2
@@ -87,6 +89,7 @@ class SnakeHead(Snake):
             self.speed -= 1
         else:
             self.speed = 1000
+            target = (x, y)
             match self.direction:
                 # Only update the moves function after it moves, to stop 180 turns
                 case self.up:
@@ -114,15 +117,16 @@ class SnakeHead(Snake):
                         return 0
                     target = (x - 1, y)
                     self.moves = [0, 2, 3]
-        # TODO: FIX BELOW ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        ate = self.rect.colliderect(self.game.get_apple())
-        if self.next is not None:
-            snake = self.next.update(location, ate)
-        if ate:
-            self.game.new_apple()
+            self.game.update_board(target, (x, y))
+            # If there is more snake, continue the trend
+            ate = False
             if self.next is not None:
-                return snake
-            self.next = Snake(self.game, location)
-            return self.next
-        return None
+                # Temp setting ate to false. Will handle apple after testing this works
+                self.next.update((x, y), ate)
+            # If snake is last we need to clear the cell, or make a new snake there.
+            if ate:
+                self.next = self.game.create_snake((x, y))
+            else:
+                self.game.clear_cell((x, y))
+            self.cell = self.game.get_cell(target)
 

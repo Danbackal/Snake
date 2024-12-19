@@ -33,14 +33,12 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
         # defining board borders for collision and bounding
         # TODO Change this. Wont work with cell format (I think)
         self.board_top = (screen_height/5) + 4
-        self.board_bottom = screen_height - 4
-        self.board_left = 4
-        self.board_right = screen_width - 4
 
         # defining pixel height for conversion - a square so don't need x and y
-        self.pixel_size = (self.board_right - self.board_left) / 50
+        self.pixel_size = screen_width / 40
 
         self.header = pygame.rect.Rect(0, 0, screen_width, screen_height)
+
         # Board is now List of List of Surfaces (or sprites?)
         # Draw for board will be drawing each cell, and each cell will have an empty or not functionality
         # If cell is empty, it will draw black. else, draw the sprite it contains
@@ -51,17 +49,25 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
         # when snake head enters one, it takes it away)
         # That is good - does mean snake needs to know what cell it is in. This should help collisions I think.
 
-        # Board space should be... 50x50?
-        self.board = [[Cell(self.pixel_size, (i, j)) for j in range(50)] for i in range(50)]
+        # Board space should be... 40x40?
+        # For now, 40x40 to work with 400. We will work out kinks later. No border
+        # X offset is just the small border: self.board_left
+        # similarly, Y is header: self.board_top
+        # Do we want to give each cell the top left? Yes, because of def of rect
+        self.board = [[Cell(self.pixel_size, (i, j), 0, self.board_top) for j in range(50)]
+                      for i in range(50)]
 
         # Game Pieces
-        self.snake_head = SnakeHead(self, ())
+        self.snake_head = SnakeHead(self, self.board[19][19])
         # Will need to make this a function that chooses a random place on the board not currently occupied by snake
         # possibly eventually an "available spaces" type list, and choose a random
         # list and index from the size available
-        self.apple = pygame.rect.Rect(randint(self.board_left, self.board_right),
-                                      randint(self.board_top, self.board_bottom - self.pixel_size),
-                                      self.pixel_size, self.pixel_size)
+
+        # TODO: Build apple
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # self.apple = pygame.rect.Rect(randint(self.board_left, self.board_right),
+        #                               randint(self.board_top, self.board_bottom - self.pixel_size),
+        #                               self.pixel_size, self.pixel_size)
 
     def update(self, event):
         match self.game_state:
@@ -76,7 +82,7 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
             case self.game_paused:
                 print()
             case self.game_end:
-                print()
+                print("Game Over")
             case self.game_close:
                 print("Game Closing")
 
@@ -84,10 +90,14 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
         # Draw header section
         pygame.draw.rect(surface, "grey", self.header)
 
+        # TODO:
+        # Current draw shows board uneven, and split up by white lines, where pixel space leaks through.
+        # This is okay, if background is also black. Would also let us not draw empty cells (space saver)
+        # But still needs big fixes
         # Draw board section
-        pygame.draw.rect(surface, "black", self.board)
-        pygame.draw.rect(surface, "white", self.apple)
-        self.snake.draw(surface)
+        for i in self.board:
+            for j in i:
+                j.draw(surface)
 
     def run_game(self):
         return self.game_state != self.game_close
@@ -106,6 +116,8 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
     def update_board(self, target, value):
         # Used for updating the snake
         self.board[target[0]][target[1]] = self.board[value[0]][value[1]]
+        # SNAKE = 2
+        self.board[target[0]][target[1]].set_cell(2)
 
     def clear_cell(self, cell):
         self.board[cell[0]][cell[1]].clear_self()
@@ -113,14 +125,15 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
     def get_cell(self, cell):
         return self.board[cell[0]][cell[1]]
 
-    def get_apple(self):
-        return self.apple
+    # def get_apple(self):
+    #     return self.apple
 
     # For now, random location.
-    def new_apple(self):
-        self.apple = pygame.rect.Rect(randint(self.board_left, self.board_right),
-                                      randint(self.board_top, self.board_bottom - self.pixel_size),
-                                      self.pixel_size, self.pixel_size)
+    # TODO: New apple func
+    # def new_apple(self):
+    #     self.apple = pygame.rect.Rect(randint(self.board_left, self.board_right),
+    #                                   randint(self.board_top, self.board_bottom - self.pixel_size),
+    #                                   self.pixel_size, self.pixel_size)
 
 
 pygame.init()
@@ -140,6 +153,7 @@ while _game.run_game():
     _game.update("Pass")
 
     # draw
+    screen.fill("black")
     _game.draw(screen)
     pygame.display.update()
     clock.tick(FPS)
