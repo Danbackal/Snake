@@ -1,6 +1,14 @@
 # Snake
 Retro Snake game, using pygame. Used to continue my refresher of Python and learning of Pygame.
 
+### December 19 update:
+Early today I fixed the snake growing and updating - kind of. It updates, but because it isnt bound to a proper grid, the movement is WONKY. 
+I think I officially need to structure a grid, and bind things to the center of a cell, rather than trying to figure out the coordinate system with math.
+The cell could be decided by the screen size (game could always be, say, 50x50, and a larger game space just means each cell is larger).
+This is in line with what I need for deciding the next apple location, as it needs to be in an unoccupied cell. It might make sense for the Board to be a part of the Game class
+and have it store this object, that has a unique draw function? Like we draw the board cell by cell. Empty cells do nothing (check for cell value is not None) and other cells
+call the cell values draw function. 
+
 ### December 18 update:
 Initial code is in. Thought process was store snake body in Sprite Group for collisions, and a linked list for updates. The movement isnt quite what I want,
 and I think part of that is it is moving very freely. It also looks like the apple isn't quite in line with the snakes movement.
