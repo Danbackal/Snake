@@ -2,15 +2,15 @@ import pygame
 from pygame.locals import *
 
 
-# Snake class really just implements a body section of the snake.
-# This allows us to iterate through a list, and tell the next segment where to move
-# It also allows us to keep a snake head
-# It will function like a linked list, where the node value is the rectangle, and next is the next segment
-class Snake(pygame.sprite.Sprite):
-    def __init__(self, game, location):
-        super().__init__()
+# New snake class for cell version of game
+# Snake needs its location, the ability to move to an adjacent cell, and update the next body
+# segment.
+# The init I think stays the same. Location will be center of cell, cell should handle positioning
+class Snake:
+    def __init__(self, game, cell, location):
         self.game = game
-        self.body_size = game.get_pixel_size()
+        self.cell = cell
+        self.body_size = cell.get_cell_size()
         # Will need to add to this. Head will get a value.
         # When food is eaten, tail will add one in its position
         self.image = pygame.surface.Surface((self.body_size, self.body_size))
@@ -18,31 +18,43 @@ class Snake(pygame.sprite.Sprite):
         self.image.fill("green")
         self.next = None
 
+    # TODO: Make snake draw itself. This will be in cell for now
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
+    # Okay hold up. Does the Snake fill out, or does the cell know it has a snake?
+    # Do I need a whole snake class, or can the cell have 3 values - snake, fruit, empty?
+    # I do want snake to be a linked list. But could it be a list of cell locations?
+    # Head cell moves to a new location if empty or apple (board[x][y] = board[location.x][location.y])
+    # Head now calls head.next to move to board[location.x][location.y]
+    # head.next now does the same - board[location.x][location.y] = board[next.l.x][next.l.y]
+    # and so on and so forth.
+    # Snake is a linked list, with the ability to extend itself and eat fruit. It shouldn't be a surface
+    # because the cell should draw itself?
+    # But if we are learning pygame, should, at some point, make snake draw itself.
     def update(self, new_location, ate):
+        # Don't need to check if next cell is empty - only snake head cares about this
         # Get current location to update next leg with
-        location = self.rect.center
-        # Set current leg to new location
-        self.rect.move_ip(new_location[0] - self.rect.x, new_location[1] - self.rect.y)
-
+        location = self.cell.get_cell_location()
+        # Game does the board[x][y] = board[old.x][old.y]
+        self.game.update_board(new_location, location)
         # If there is more snake, continue the trend
         if self.next is not None:
             return self.next.update(location, ate)
-        elif ate:
-            new_snake = Snake(self.game, location)
+        # If snake is last we need to clear the cell, or make a new snake there.
+        if ate:
+            self.next = self.game.create_snake(location)
         else:
-            new_snake = None
-        # If we added a new snake, we need to pass it back to the game update, to add to group
-        self.next = new_snake
-        return new_snake
+            self.game.clear_cell(location)
+        self.cell = self.game.get_cell(new_location)
 
 
+# I know inheritance doesn't make sense without shared methods - eventually draw will be shared
+# If I stick with cell method, I will likely remove inheritance
 class SnakeHead(Snake):
     # All the current init info is the same, really just want a unique update method
-    def __init__(self, game, location):
-        super().__init__(game, location)
+    def __init__(self, game, cell, location):
+        super().__init__(game, cell, location)
         self.up = 0
         self.right = 1
         self.down = 2
@@ -57,9 +69,11 @@ class SnakeHead(Snake):
     # Is the next direction 180 of the current direction, say
     # is next direction allowed. So if traveling right, the allowed directions are right, up, and down.
     # Then, until it moves, it tracks the last valid input.
+
+    # Snake head now needs to check if it will move to a space outside of the board
     def update(self, pressed):
         # grab center to send to next in line
-        location = self.rect.center
+        x, y = self.cell.get_cell_location()
         # Don't want to be able to change direction 180 degrees
         if pressed[K_UP] and 0 in self.moves:
             self.direction = 0
@@ -76,17 +90,31 @@ class SnakeHead(Snake):
             match self.direction:
                 # Only update the moves function after it moves, to stop 180 turns
                 case self.up:
-                    self.rect.move_ip(0, -self.body_size)
+                    # Need checks for edge of board
+                    if y == 0:
+                        self.game.end_game()
+                        return 0
+                    target = (x, y - 1)
                     self.moves = [0, 1, 3]
                 case self.right:
-                    self.rect.move_ip(self.body_size, 0)
+                    if x == 49:
+                        self.game.end_game()
+                        return 0
+                    target = (x + 1, y)
                     self.moves = [0, 1, 2]
                 case self.down:
-                    self.rect.move_ip(0, self.body_size)
+                    if y == 49:
+                        self.game.end_game()
+                        return 0
+                    target = (x, y + 1)
                     self.moves = [1, 2, 3]
                 case self.left:
-                    self.rect.move_ip(-self.body_size, 0)
+                    if x == 0:
+                        self.game.end_game()
+                        return 0
+                    target = (x - 1, y)
                     self.moves = [0, 2, 3]
+        # TODO: FIX BELOW ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         ate = self.rect.colliderect(self.game.get_apple())
         if self.next is not None:
             snake = self.next.update(location, ate)

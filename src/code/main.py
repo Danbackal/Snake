@@ -3,6 +3,7 @@ from pygame.locals import *
 from random import randint
 
 from snake import Snake, SnakeHead
+from board_cell import Cell
 
 # Snake Game
 # Need game class - hold creation of apples, holds score, holds snake.
@@ -30,24 +31,31 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
 
         # defining sizes as variable, in case I want to change the size of the game later
         # defining board borders for collision and bounding
+        # TODO Change this. Wont work with cell format (I think)
         self.board_top = (screen_height/5) + 4
         self.board_bottom = screen_height - 4
         self.board_left = 4
         self.board_right = screen_width - 4
 
         # defining pixel height for conversion - a square so don't need x and y
-        self.pixel_size = 4
+        self.pixel_size = (self.board_right - self.board_left) / 50
 
         self.header = pygame.rect.Rect(0, 0, screen_width, screen_height)
-        self.board = pygame.rect.Rect(self.board_left, self.board_top,
-                                      self.board_right - self.board_left, self.board_bottom - self.board_top)
+        # Board is now List of List of Surfaces (or sprites?)
+        # Draw for board will be drawing each cell, and each cell will have an empty or not functionality
+        # If cell is empty, it will draw black. else, draw the sprite it contains
+        # Won't need a Sprite Group for snake drawing this way
+
+        # Need a way to get all empty cells for new Apple creation. Come up with this later
+        # (Maybe a set of unvisited - when tail of snake leaves cell, if re-adds it to options, and
+        # when snake head enters one, it takes it away)
+        # That is good - does mean snake needs to know what cell it is in. This should help collisions I think.
+
+        # Board space should be... 50x50?
+        self.board = [[Cell(self.pixel_size, (i, j)) for j in range(50)] for i in range(50)]
 
         # Game Pieces
-        self.snake = pygame.sprite.Group()
-        self.snake_head = SnakeHead(self, (((self.board_right - self.board_left) / 2) + self.pixel_size / 2,
-                                       (self.board_top + (self.board_bottom - self.board_top) / 2)
-                                       - self.pixel_size / 2))
-        self.snake.add(self.snake_head)
+        self.snake_head = SnakeHead(self, ())
         # Will need to make this a function that chooses a random place on the board not currently occupied by snake
         # possibly eventually an "available spaces" type list, and choose a random
         # list and index from the size available
@@ -64,10 +72,7 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
                 pressed_keys = pygame.key.get_pressed()
                 if pressed_keys[K_p]:
                     print("Pause here")
-                # have to check here for new snake to update our group for drawing
-                new_snake = self.snake_head.update(pressed_keys)
-                if new_snake is not None:
-                    self.snake.add(new_snake)
+                self.snake_head.update(pressed_keys)
             case self.game_paused:
                 print()
             case self.game_end:
@@ -87,11 +92,26 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
     def run_game(self):
         return self.game_state != self.game_close
 
+    def end_game(self):
+        self.game_state = self.game_end
+
     def close_game(self):
         self.game_state = self.game_close
 
     def get_pixel_size(self):
         return self.pixel_size
+
+    # Cell related function
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def update_board(self, target, value):
+        # Used for updating the snake
+        self.board[target[0]][target[1]] = self.board[value[0]][value[1]]
+
+    def clear_cell(self, cell):
+        self.board[cell[0]][cell[1]].clear_self()
+
+    def get_cell(self, cell):
+        return self.board[cell[0]][cell[1]]
 
     def get_apple(self):
         return self.apple
