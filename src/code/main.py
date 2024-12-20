@@ -57,17 +57,18 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
         self.board = [[Cell(self.pixel_size, (i, j), 0, self.board_top) for j in range(50)]
                       for i in range(50)]
 
+        # List of available spaces. When last snake part leaves a space, it enters this list again.
+        # When snake head enters area, it is removed from this list.
+        self.available_cells = []
+        for x in range(40):
+            for y in range(40):
+                self.available_cells.append((x, y))
+        # Don't want to initialize snake cells with cell removal, so pre-empting snake head here
+        self.available_cells.remove((19, 19))
+
         # Game Pieces
         self.snake_head = SnakeHead(self, self.board[19][19])
-        # Will need to make this a function that chooses a random place on the board not currently occupied by snake
-        # possibly eventually an "available spaces" type list, and choose a random
-        # list and index from the size available
-
-        # TODO: Build apple
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # self.apple = pygame.rect.Rect(randint(self.board_left, self.board_right),
-        #                               randint(self.board_top, self.board_bottom - self.pixel_size),
-        #                               self.pixel_size, self.pixel_size)
+        self.new_apple()
 
     def update(self, event):
         match self.game_state:
@@ -119,21 +120,33 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
         # SNAKE = 2
         self.board[target[0]][target[1]].set_cell(2)
 
+    def remove_available_cells(self, target):
+        self.available_cells.remove(target)
+
     def clear_cell(self, cell):
         self.board[cell[0]][cell[1]].clear_self()
+        self.available_cells.append(cell)
 
     def get_cell(self, cell):
         return self.board[cell[0]][cell[1]]
 
-    # def get_apple(self):
-    #     return self.apple
+    def fruit_check(self, target):
+        return self.board[target[0]][target[1]].get_value() == 1
 
-    # For now, random location.
-    # TODO: New apple func
-    # def new_apple(self):
-    #     self.apple = pygame.rect.Rect(randint(self.board_left, self.board_right),
-    #                                   randint(self.board_top, self.board_bottom - self.pixel_size),
-    #                                   self.pixel_size, self.pixel_size)
+    # Apple functions
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    # Random apple location from available cells
+    def new_apple(self):
+        x, y = self.available_cells[randint(0, len(self.available_cells))]
+        # APPLE = 1
+        self.board[x][y].set_cell(1)
+
+    # Snake Functions
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def create_snake(self, location):
+        return Snake(self, self.board[location[0]][location[1]])
 
 
 pygame.init()

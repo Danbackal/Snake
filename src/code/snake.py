@@ -35,6 +35,7 @@ class Snake:
     # because the cell should draw itself?
     # But if we are learning pygame, should, at some point, make snake draw itself.
     def update(self, new_location, ate):
+        print("entering snake body")
         # Don't need to check if next cell is empty - only snake head cares about this
         # Get current location to update next leg with
         location = self.cell.get_cell_location()
@@ -44,8 +45,9 @@ class Snake:
         if self.next is not None:
             self.next.update(location, ate)
         # If snake is last we need to clear the cell, or make a new snake there.
-        if ate:
+        elif ate:
             self.next = self.game.create_snake(location)
+            self.game.new_apple()
         else:
             self.game.clear_cell(location)
         self.cell = self.game.get_cell(new_location)
@@ -121,15 +123,21 @@ class SnakeHead:
                         return 0
                     target = (x - 1, y)
                     self.moves = [0, 2, 3]
+            if self.game.get_cell(target).get_value() == 2:
+                self.game.end_game()
+                return 0
+            # Set ate before moving, so we don't override the apple cell
+            ate = self.game.fruit_check(target)
             self.game.update_board(target, (x, y))
-            # If there is more snake, continue the trend
-            ate = False
+            self.game.remove_available_cells(target)
             if self.next is not None:
+                print("Head not null")
                 # Temp setting ate to false. Will handle apple after testing this works
                 self.next.update((x, y), ate)
             # If snake is last we need to clear the cell, or make a new snake there.
-            if ate:
+            elif ate:
                 self.next = self.game.create_snake((x, y))
+                self.game.new_apple()
             else:
                 self.game.clear_cell((x, y))
             self.cell = self.game.get_cell(target)
