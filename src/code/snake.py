@@ -2,10 +2,6 @@ import pygame
 from pygame.locals import *
 
 
-# New snake class for cell version of game
-# Snake needs its location, the ability to move to an adjacent cell, and update the next body
-# segment.
-# The init I think stays the same. Location will be center of cell, cell should handle positioning
 class Snake:
     def __init__(self, game, cell):
         self.game = game
@@ -13,29 +9,14 @@ class Snake:
         # SNAKE = 2
         self.cell.set_cell(2)
         self.body_size = cell.get_cell_size()
-        # Will need to add to this. Head will get a value.
-        # When food is eaten, tail will add one in its position
-        # self.image = pygame.surface.Surface((self.body_size, self.body_size))
-        # self.rect = self.image.get_rect(center=self.cell.get_center())
-        # self.image.fill("green")
         self.next = None
 
-    # TODO: Make snake draw itself. This will be in cell for now
-    # def draw(self, surface):
-    #     surface.blit(self.image, self.rect)
-
-    # Okay hold up. Does the Snake fill out, or does the cell know it has a snake?
-    # Do I need a whole snake class, or can the cell have 3 values - snake, fruit, empty?
-    # I do want snake to be a linked list. But could it be a list of cell locations?
     # Head cell moves to a new location if empty or apple (board[x][y] = board[location.x][location.y])
     # Head now calls head.next to move to board[location.x][location.y]
     # head.next now does the same - board[location.x][location.y] = board[next.l.x][next.l.y]
     # and so on and so forth.
     # Snake is a linked list, with the ability to extend itself and eat fruit. It shouldn't be a surface
-    # because the cell should draw itself?
-    # But if we are learning pygame, should, at some point, make snake draw itself.
     def update(self, new_location, ate):
-        print("entering snake body")
         # Don't need to check if next cell is empty - only snake head cares about this
         # Get current location to update next leg with
         location = self.cell.get_cell_location()
@@ -71,14 +52,8 @@ class SnakeHead:
         self.speed = 0
         self.moves = [0, 1, 2]
 
-    # Current update function allows one to hold down the up key and spam left and right, letting the snake turn
-    # 180 degrees. I think I need to consider an array of locations, and a next allowed location function
-    # Something that says the snake can only ever move in 3 directions. Instead of saying
-    # Is the next direction 180 of the current direction, say
-    # is next direction allowed. So if traveling right, the allowed directions are right, up, and down.
-    # Then, until it moves, it tracks the last valid input.
-
-    # Snake head now needs to check if it will move to a space outside of the board
+    # Snake head takes care of hitting a wall/snake segment, and direction. Snake body just listens to head
+    # No need for checks from snake body
     def update(self, pressed):
         # grab center to send to next in line
         x, y = self.cell.get_cell_location()
@@ -131,8 +106,6 @@ class SnakeHead:
             self.game.update_board(target, (x, y))
             self.game.remove_available_cells(target)
             if self.next is not None:
-                print("Head not null")
-                # Temp setting ate to false. Will handle apple after testing this works
                 self.next.update((x, y), ate)
             # If snake is last we need to clear the cell, or make a new snake there.
             elif ate:
