@@ -54,19 +54,11 @@ class SnakeHead:
 
     # Snake head takes care of hitting a wall/snake segment, and direction. Snake body just listens to head
     # No need for checks from snake body
-    def update(self, pressed):
+    def update(self):
         # grab center to send to next in line
         x, y = self.cell.get_cell_location()
         target = (x, y)
-        # Don't want to be able to change direction 180 degrees
-        if pressed[K_UP] and 0 in self.moves:
-            self.direction = 0
-        if pressed[K_RIGHT] and 1 in self.moves:
-            self.direction = 1
-        if pressed[K_DOWN] and 2 in self.moves:
-            self.direction = 2
-        if pressed[K_LEFT] and 3 in self.moves:
-            self.direction = 3
+
         if self.speed > 0:
             self.speed -= 1
         else:
@@ -114,4 +106,14 @@ class SnakeHead:
             else:
                 self.game.clear_cell((x, y))
             self.cell = self.game.get_cell(target)
+
+    def update_movement(self, pressed):
+        if pressed == K_UP and 0 in self.moves:
+            self.direction = 0
+        if pressed == K_RIGHT and 1 in self.moves:
+            self.direction = 1
+        if pressed == K_DOWN and 2 in self.moves:
+            self.direction = 2
+        if pressed == K_LEFT and 3 in self.moves:
+            self.direction = 3
 

@@ -68,22 +68,30 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
     # Game Loop Functions
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def update(self):
-        pressed_keys = pygame.key.get_pressed()
-        # Not doing match/case - start, pause, and end all have the same checks
+        # events are for change in key status - good for menus
+        # pressed keys are for status of key - good for things where keys are held down (parachuter) but
+        # not needed for snake, a single input game.
+        # Revamp - switch to event triggers
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                self.close_game()
+            elif event.type == KEYDOWN:
+                if self.game_state == self.game_running:
+                    if event.key == K_p:
+                        self.game_state = self.game_paused
+                        self.menu_builder()
+                    self.snake_head.update_movement(event.key)
+                elif self.game_state == self.game_close:
+                    print("Game Closing")
+                else:
+                    if event.key == K_UP:
+                        self.menu_up()
+                    elif event.key == K_DOWN:
+                        self.menu_down()
+                    elif event.key == K_RETURN:
+                        self.menu_select()
         if self.game_state == self.game_running:
-            if pressed_keys[K_p]:
-                self.game_state = self.game_paused
-                self.menu_builder()
-            self.snake_head.update(pressed_keys)
-        elif self.game_state == self.game_close:
-            print("Game Closing")
-        else:
-            if pressed_keys[K_UP]:
-                self.menu_up()
-            elif pressed_keys[K_DOWN]:
-                self.menu_down()
-            elif pressed_keys[K_RETURN]:
-                self.menu_select()
+            self.snake_head.update()
 
     def draw(self, surface):
         # Draw header section
@@ -263,11 +271,6 @@ _game = Game(SCREEN_WIDTH, SCREEN_HEIGHT)
 
 # Game loop
 while _game.run_game():
-    # check for closures
-    # Need a way to say if this is a mouse click, pass it to update also
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            _game.close_game()
 
     _game.update()
 
