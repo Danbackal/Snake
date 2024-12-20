@@ -25,7 +25,6 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
         self.game_paused = 2
         self.game_end = 3
         self.game_close = 4
-        self.game_state = 0
         self.screen_width = screen_width
         self.screen_height = screen_height
 
@@ -52,8 +51,6 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
         self.menu_body = pygame.rect.Rect(102, 202, 196, 196)
         self.menu_locations = [(120, 220), (120, 240), (120, 260)]
 
-        self.menu_builder()
-
         self.board_top = (screen_height/5)
 
         # defining pixel height for conversion - a square so don't need x and y
@@ -61,6 +58,55 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
 
         self.header = pygame.rect.Rect(0, 0, screen_width, screen_height)
 
+        # Game Start initializations. Check the best way to do this in python, this is messy
+        self.game_state = 0
+        self.board = [[]]
+        self.available_cells = []
+        self.snake_head = 0
+        self.start_game()
+
+    # Game Loop Functions
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def update(self):
+        pressed_keys = pygame.key.get_pressed()
+        # Not doing match/case - start, pause, and end all have the same checks
+        if self.game_state == self.game_running:
+            if pressed_keys[K_p]:
+                self.game_state = self.game_paused
+                self.menu_builder()
+            self.snake_head.update(pressed_keys)
+        elif self.game_state == self.game_close:
+            print("Game Closing")
+        else:
+            if pressed_keys[K_UP]:
+                self.menu_up()
+            elif pressed_keys[K_DOWN]:
+                self.menu_down()
+            elif pressed_keys[K_RETURN]:
+                self.menu_select()
+
+    def draw(self, surface):
+        # Draw header section
+        pygame.draw.rect(surface, "grey", self.header)
+
+        # Draw board section
+        for i in self.board:
+            for j in i:
+                j.draw(surface)
+
+        # If in menu - draw over board
+        if self.game_state != self.game_running:
+            pygame.draw.rect(surface, "white", self.menu_border)
+            pygame.draw.rect(surface, "black", self.menu_body)
+            for i in range(len(self.menu_text)):
+                surface.blit(self.menu_text[i], self.menu_rects[i])
+
+    # Game Set UP and Run Functions
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    # Function to start up game. Moving out of init func to make it easy to restart game
+    def start_game(self):
+        self.game_state = 0
         # Board is now List of List of Surfaces
         # Draw for board will be drawing each cell, and each cell will have an empty or not functionality
         # If cell is empty, it will draw black. else, draw the sprite it contains
@@ -82,60 +128,14 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
         # Game Pieces
         self.snake_head = SnakeHead(self, self.board[19][19])
         self.new_apple()
-
-    def update(self):
-        pressed_keys = pygame.key.get_pressed()
-        match self.game_state:
-            case self.game_start:
-                if pressed_keys[K_UP]:
-                    self.menu_up()
-                elif pressed_keys[K_DOWN]:
-                    self.menu_down()
-                elif pressed_keys[K_RETURN]:
-                    self.menu_select()
-            case self.game_running:
-                if pressed_keys[K_p]:
-                    self.game_state = self.game_paused
-                    self.menu_builder()
-                self.snake_head.update(pressed_keys)
-            case self.game_paused:
-                if pressed_keys[K_UP]:
-                    self.menu_up()
-                elif pressed_keys[K_DOWN]:
-                    self.menu_down()
-                elif pressed_keys[K_RETURN]:
-                    self.menu_select()
-            case self.game_end:
-                if pressed_keys[K_UP]:
-                    self.menu_up()
-                elif pressed_keys[K_DOWN]:
-                    self.menu_down()
-                elif pressed_keys[K_RETURN]:
-                    self.menu_select()
-            case self.game_close:
-                print("Game Closing")
-
-    def draw(self, surface):
-        # Draw header section
-        pygame.draw.rect(surface, "grey", self.header)
-
-        # Draw board section
-        for i in self.board:
-            for j in i:
-                j.draw(surface)
-
-        # If in menu - draw over board
-        if self.game_state != self.game_running:
-            pygame.draw.rect(surface, "white", self.menu_border)
-            pygame.draw.rect(surface, "black", self.menu_body)
-            for i in range(len(self.menu_text)):
-                surface.blit(self.menu_text[i], self.menu_rects[i])
+        self.menu_builder()
 
     def run_game(self):
         return self.game_state != self.game_close
 
     def end_game(self):
         self.game_state = self.game_end
+        self.menu_builder()
 
     def close_game(self):
         self.game_state = self.game_close
@@ -218,8 +218,7 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
             case "> resume":
                 self.game_state = 1
             case "> restart":
-                # self.restart_game()
-                self.game_state = 0
+                self.start_game()
             case "> quit":
                 self.game_state = 4
 
