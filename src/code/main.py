@@ -1,6 +1,7 @@
 import pygame
 from pygame.locals import *
 from random import randint
+import os
 
 from snake import Snake, SnakeHead
 from board_cell import Cell
@@ -15,6 +16,9 @@ from board_cell import Cell
 SCREEN_WIDTH = 400
 SCREEN_HEIGHT = 500
 FPS = 30
+current_work_dir = os.getcwd()
+current_work_dir = current_work_dir[:-5]
+os.chdir(current_work_dir)
 
 
 class Game:  # Game does not need to be a sprite - it holds sprites.
@@ -43,7 +47,7 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
         # Only ever need three at one time. Place first, second, third. Background is black, text is white
         # If third isn't used, it'll just not show up.
         # Menu update functions will update strings for us
-        self.menu_font = pygame.font.Font(None, 16)  # Guessing size, will edit later
+        self.menu_font = pygame.font.Font("resources/Orbitron-Regular.ttf", 14)
         self.menu_text = []
         self.menu_rects = []
         # Hard coding locations for now, want to test functionality
@@ -57,6 +61,13 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
         self.pixel_size = screen_width / 40
 
         self.header = pygame.rect.Rect(0, 0, screen_width, screen_height)
+        self.title_font = pygame.font.Font("resources/Orbitron-Bold.ttf", 30)
+        self.title = self.title_font.render("Snake", True, "black")
+        self.title_rect = self.title.get_rect(topleft=(10, 10))
+        self.score = 0
+        self.score_font = pygame.font.Font("resources/Orbitron-Regular.ttf", 18)
+        self.scoreboard = self.score_font.render(f"Score: {self.score}", True, "black")
+        self.scoreboard_rect = self.scoreboard.get_rect(topleft=(280, 60))
 
         # Game Start initializations. Check the best way to do this in python, this is messy
         self.game_state = 0
@@ -96,6 +107,8 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
     def draw(self, surface):
         # Draw header section
         pygame.draw.rect(surface, "grey", self.header)
+        surface.blit(self.title, self.title_rect)
+        surface.blit(self.scoreboard, self.scoreboard_rect)
 
         # Draw board section
         for i in self.board:
@@ -135,6 +148,7 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
 
         # Game Pieces
         self.snake_head = SnakeHead(self, self.board[19][19])
+        self.score = -1
         self.new_apple()
         self.menu_builder()
 
@@ -180,6 +194,10 @@ class Game:  # Game does not need to be a sprite - it holds sprites.
         x, y = self.available_cells[randint(0, len(self.available_cells))]
         # APPLE = 1
         self.board[x][y].set_cell(1)
+        self.score += 1
+        self.scoreboard = self.score_font.render(f"Score: {self.score}", True, "black")
+        self.scoreboard_rect = self.scoreboard.get_rect(topleft=(280, 60))
+
 
     # Snake Functions
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
